@@ -57,7 +57,7 @@ class MpdClient
     index_file(file)
     ## load song to queue
     connection.addid(file, position.to_i)
-    Playlist.update(current_playlist, current_queue)
+    Playlist.update(current_playlist, connection.queue)
   end
 
   def queue_playlist(file, range)
@@ -65,7 +65,17 @@ class MpdClient
     ## load playlist to queue
     playlist = MPD::Playlist.new(connection, file)
     playlist.load(range)
-    Playlist.update(current_playlist, current_queue)
+    Playlist.update(current_playlist, connection.queue)
+  end
+
+  def move(id, offset)
+    connection.move({id: id}, offset)
+    Playlist.update(current_playlist, connection.queue)
+  end
+
+  def delete(id)
+    connection.delete(id: id)
+    Playlist.update(current_playlist, connection.queue)
   end
 
   def current_queue
@@ -75,7 +85,6 @@ class MpdClient
     end
     playlist
   end
-
 
   private
 

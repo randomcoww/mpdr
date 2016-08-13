@@ -11,8 +11,6 @@ class Song
   attribute :artist, String
   attribute :genre, String
   attribute :playlist_index, Integer
-  attribute :next, Song
-  attribute :prev, Song
 
   def self.update(opts)
     id = "#{opts[:file]}_#{opts[:playlist_index].to_i}"
