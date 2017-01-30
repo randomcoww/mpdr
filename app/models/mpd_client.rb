@@ -98,14 +98,9 @@ class MpdClient
   end
 
   def delete(position)
-    ## stop if this is the current song - otherwise it won't delete
-    if connection.current_song.pos == position
-      go_next
-      stop
-    end
     id = id_from_position(position)
     if id
-      connection.play(id: id)
+      connection.delete(id: id)
     end
   end
 

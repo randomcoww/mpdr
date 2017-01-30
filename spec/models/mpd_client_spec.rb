@@ -125,6 +125,10 @@ describe MpdClient do
         client.play(0)
       end
 
+      after :each do
+        client.connection.disconnect
+      end
+
       it "sets current_song" do
         expect(client.connection.current_song.file).to eq('dir1/test1.mp3')
       end
@@ -136,7 +140,21 @@ describe MpdClient do
         client.queue_file('dir1/test1.mp3', 0)
       end
 
-      context "with current_song" do
+      after :each do
+        client.connection.disconnect
+      end
+
+      context "no current_song" do
+        before :each do
+          client.delete(0)
+        end
+
+        it "deletes item" do
+          expect(client.connection.queue.size).to eq(0)
+        end
+      end
+
+      context "delete song being played" do
         context "single file" do
           before :each do
             client.play(0)
@@ -157,12 +175,14 @@ describe MpdClient do
         context "multiple files" do
           before :each do
             client.queue_file('dir2/test2.mp3', 1)
-
-            client.play(0)
-            client.delete(0)
           end
 
           context "first file" do
+            before :each do
+              client.play(0)
+              client.delete(0)
+            end
+
             it "goes to next song" do
               expect(client.connection.current_song.file).to eq('dir2/test2.mp3')
             end
@@ -173,6 +193,15 @@ describe MpdClient do
           end
 
           context "last file" do
+            before :each do
+              client.play(1)
+              client.delete(1)
+            end
+
+            it "nulls current song" do
+              expect(client.connection.current_song).to eq(nil)
+            end
+
             it "deletes item" do
               expect(client.connection.queue.size).to eq(1)
             end
@@ -183,6 +212,11 @@ describe MpdClient do
 
 
     describe ".queue_playlist" do
+
+      after :each do
+        client.connection.disconnect
+      end
+
       context "empty playlist" do
         before :each do
           client.queue_playlist('dir1/test.cue', 0..2, 0)
