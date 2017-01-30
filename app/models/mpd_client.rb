@@ -55,7 +55,7 @@ class MpdClient
   def queue_file(file, position)
     ## load song to queue
     connection.addid(file, position.to_i)
-    index_file(file)
+    # index_file(file)
   end
 
   def queue_playlist(file, playlist_positions, queue_position)
@@ -72,7 +72,7 @@ class MpdClient
     ## playlist items always loads att end
     ## move range of new items into position
     connection.move((current_size..connection.queue.size-1), queue_position.to_i)
-    index_playlist_file(file)
+    # index_playlist_file(file)
   end
 
   def play(position)
