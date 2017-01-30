@@ -6,44 +6,45 @@ class Content
   attribute :mtime, Integer
   attribute :children, String, default: [], mapping: { index: 'not_analyzed' }
 
-  def reindex(recursive=false)
-    if File.file?(id)
-      self.name = File.basename(id)
-      self.mtime = File.mtime(id)
-      self.directory = false
-      self.save
+  def self.reindex(opts)
+    path = opts[:path].to_s
+    recursive = !!opts[:recursive]
+    content = nil
 
-    elsif File.directory?(id)
-      self.name = File.basename(id)
-      self.mtime = File.mtime(id)
-      self.directory = true
+    if File.file?(path)
+      content = get_or_create(path)
+      content.name = File.basename(path)
+      content.directory = false
+      content.save
 
-      Dir.entries(id).each do |e|
+    elsif File.directory?(path)
+      content = get_or_create(path)
+      content.name = File.basename(path)
+      content.directory = true
+
+      Dir.entries(path).each do |e|
         case e
         when '.', '..'
           next
         end
 
-        full_path = File.join(id, e)
-        self.children << e
+        full_path = File.join(path, e)
+        content.children << e
 
-        child = Content.get_or_create(full_path)
         if recursive
-          child.reindex(true)
-        else
-          child.save
+          child = Content.get_or_create(full_path)
         end
       end
-      self.save
+      content.save
     end
-    self
+    content
   end
 
   def self.get_or_create(id)
     find(id)
   rescue
-    file = new
-    file[:id] = id
-    file
+    content = new
+    content[:id] = id
+    content
   end
 end
