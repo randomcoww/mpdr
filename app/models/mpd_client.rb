@@ -10,18 +10,20 @@ class MpdClient
   end
 
   def connect
-    connection.connect unless connection.connected?
-    connection.consume = true
-    connection.random = false
-    connection.repeat = false
-    connection.single = false
+    unless connection.connected?
+      connection.connect
+      connection.consume = true
+      connection.random = false
+      connection.repeat = false
+      connection.single = false
 
-    connection.on :songid do |s|
-      current_song_changes(s)
-    end
+      connection.on :songid do |s|
+        current_song_changes(s)
+      end
 
-    connection.on :nextsongid do |s|
-      next_song_changed(s)
+      connection.on :nextsongid do |s|
+        next_song_changed(s)
+      end
     end
   end
 
@@ -69,7 +71,7 @@ class MpdClient
       playlist.load(e)
     end
 
-    ## playlist items always loads att end
+    ## playlist items always loads at end
     ## move range of new items into position
     connection.move((current_size..connection.queue.size-1), queue_position.to_i)
     # index_playlist_file(file)
@@ -108,7 +110,6 @@ class MpdClient
       connection.delete(id: id)
     end
   end
-
 
 
 
