@@ -2,31 +2,29 @@ require 'rails_helper'
 
 describe MpdClient do
 
-  let! (:client) { MpdClient.client }
-
   before :each do
+    @client ||= MpdClient.client
     Song.create_index! force: true
   end
 
+  after :each do
+    @client.connection.disconnect
+  end
 
 
   describe "#client" do
     it "creates a new client" do
-      expect(client.connection).to be_a(MPD)
+      expect(@client.connection).to be_a(MPD)
     end
   end
 
 
   describe "load and index objects to elasticsearch" do
 
-    after :each do
-      client.connection.disconnect
-    end
-
     describe ".index_file" do
       ## expect mpd music path at spec/files/mpd_mount
       let (:song) {
-        client.index_file('dir1/test1.mp3')
+        @client.index_file('dir1/test1.mp3')
       }
 
       it "should be a Song object" do
@@ -52,7 +50,7 @@ describe MpdClient do
     describe ".index_playlist_file" do
       ## expect mpd music path at spec/files/mpd_mount
       let (:playlist) {
-        client.index_playlist_file('dir1/test.cue')
+        @client.index_playlist_file('dir1/test.cue')
       }
 
       it "should have multiple items" do
@@ -93,117 +91,111 @@ describe MpdClient do
   describe "manipulating playlist" do
     before :each do
       ## clear the active playlist
-      client.connection.clear
+      @client.connection.clear
     end
-
-    after :each do
-      client.connection.disconnect
-    end
-
 
     describe ".queue_file" do
       context "empty playlist" do
         before :each do
-          client.queue_file('dir1/test1.mp3', 0)
+          @client.queue_file('dir1/test1.mp3', 0)
         end
 
         it "queue should be 1 long" do
-          expect(client.connection.queue.size).to eq(1)
+          expect(@client.connection.queue.size).to eq(1)
         end
 
         it "queue item should be correct entry" do
-          expect(client.connection.queue.first.file).to eq('dir1/test1.mp3')
+          expect(@client.connection.queue.first.file).to eq('dir1/test1.mp3')
         end
       end
     end
-
 
     describe ".play" do
       before :each do
-        client.queue_file('dir1/test1.mp3', 0)
-        client.queue_file('dir2/test2.mp3', 1)
-        client.play(0)
-      end
-
-      after :each do
-        client.connection.disconnect
+        @client.queue_file('dir1/test1.mp3', 0)
+        @client.queue_file('dir2/test2.mp3', 1)
+        @client.play(0)
       end
 
       it "sets current_song" do
-        expect(client.connection.current_song.file).to eq('dir1/test1.mp3')
+        expect(@client.connection.current_song.file).to eq('dir1/test1.mp3')
       end
     end
 
-
     describe ".delete" do
-      before :each do
-        client.queue_file('dir1/test1.mp3', 0)
-      end
-
-      after :each do
-        client.connection.disconnect
-      end
-
-      context "no current_song" do
+      context "regular file" do
         before :each do
-          client.delete(0)
+          @client.queue_file('dir1/test1.mp3', 0)
+          @client.delete(0)
         end
 
         it "deletes item" do
-          expect(client.connection.queue.size).to eq(0)
+          expect(@client.connection.queue.size).to eq(0)
         end
       end
 
-      context "delete song being played" do
+      context "playlist item" do
+        before :each do
+          @client.queue_playlist('dir1/test.cue', (0..3), 0)
+          @client.delete(1)
+        end
+
+        it "only deletes selected item" do
+          expect(@client.connection.queue.size).to eq(3)
+        end
+      end
+
+      context "song being played" do
         context "single file" do
           before :each do
-            client.play(0)
-            client.delete(0)
+            @client.play(0)
+            @client.delete(0)
           end
 
           context "first file" do
             it "nulls current song" do
-              expect(client.connection.current_song).to eq(nil)
+              expect(@client.connection.current_song).to eq(nil)
             end
 
             it "deletes item" do
-              expect(client.connection.queue.size).to eq(0)
+              expect(@client.connection.queue.size).to eq(0)
             end
           end
         end
 
         context "multiple files" do
           before :each do
-            client.queue_file('dir2/test2.mp3', 1)
+            @client.queue_file('dir1/test1.mp3', 0)
+            @client.queue_file('dir2/test2.mp3', 1)
           end
 
           context "first file" do
             before :each do
-              client.play(0)
-              client.delete(0)
+              @client.play(0)
+              @client.delete(0)
             end
 
             it "goes to next song" do
-              expect(client.connection.current_song.file).to eq('dir2/test2.mp3')
+              expect(@client.connection.current_song.file).to eq('dir2/test2.mp3')
             end
 
             it "deletes item" do
-              expect(client.connection.queue.size).to eq(1)
+              expect(@client.connection.queue.size).to eq(1)
             end
           end
 
           context "last file" do
             before :each do
-              client.play(1)
-              client.delete(1)
+              @client.play(1)
+              @client.delete(1)
             end
 
             it "nulls current song" do
-              expect(client.connection.current_song).to eq(nil)
+              expect(@client.connection.current_song).to eq(nil)
             end
 
             it "deletes item" do
-              expect(client.connection.queue.size).to eq(1)
+              expect(@client.connection.queue.size).to eq(1)
             end
           end
         end
@@ -212,26 +204,21 @@ describe MpdClient do
 
 
     describe ".queue_playlist" do
-
-      after :each do
-        client.connection.disconnect
-      end
-
       context "empty playlist" do
         before :each do
-          client.queue_playlist('dir1/test.cue', 0..2, 0)
+          @client.queue_playlist('dir1/test.cue', 0..2, 0)
         end
 
         it "queue should be correct length" do
-          expect(client.connection.queue.size).to eq(3)
+          expect(@client.connection.queue.size).to eq(3)
         end
 
         it "should have correct file entry" do
-          expect(client.connection.queue[1].file).to eq('dir1/test1.mp3')
+          expect(@client.connection.queue[1].file).to eq('dir1/test1.mp3')
         end
 
         it "should have correct range" do
-          expect(client.connection.queue[1].range).to eq('0.013-0.026')
+          expect(@client.connection.queue[1].range).to eq('0.013-0.026')
         end
       end
 
@@ -239,28 +226,28 @@ describe MpdClient do
 
         shared_context "populated playlist" do
           it "queue should be correct length" do
-            expect(client.connection.queue.size).to eq(5)
+            expect(@client.connection.queue.size).to eq(5)
           end
 
           it "should have correct file entry" do
-            expect(client.connection.queue[2].file).to eq('dir1/test1.mp3')
+            expect(@client.connection.queue[2].file).to eq('dir1/test1.mp3')
           end
 
           it "should have correct range" do
-            expect(client.connection.queue[2].range).to eq('0.013-0.026')
+            expect(@client.connection.queue[2].range).to eq('0.013-0.026')
           end
         end
 
         before :each do
           ## existing
-          client.queue_file('dir1/test1.mp3', 0)
-          client.queue_file('dir2/test2.mp3', 1)
+          @client.queue_file('dir1/test1.mp3', 0)
+          @client.queue_file('dir2/test2.mp3', 1)
         end
 
         context "no current_song" do
           before :each do
             ## queue new to position 1
-            client.queue_playlist('dir1/test.cue', 0..2, 1)
+            @client.queue_playlist('dir1/test.cue', 0..2, 1)
           end
 
           it_behaves_like "populated playlist"
@@ -269,16 +256,16 @@ describe MpdClient do
         context "with existing current_song" do
           before :each do
             # cause current_song to get populated
-            client.play(1)
-            client.pause
+            @client.play(1)
+            @client.pause
             ## queue new to position 1
-            client.queue_playlist('dir1/test.cue', 0..2, 1)
+            @client.queue_playlist('dir1/test.cue', 0..2, 1)
           end
 
           it_behaves_like "populated playlist"
 
           it "current song shoud be last position" do
-            expect(client.connection.current_song.pos).to eq(4)
+            expect(@client.connection.current_song.pos).to eq(4)
           end
         end
       end

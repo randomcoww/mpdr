@@ -10,7 +10,7 @@ class MpdClient
   end
 
   def connect
-    connection.connect
+    connection.connect unless connection.connected?
     connection.consume = true
     connection.random = false
     connection.repeat = false
@@ -58,15 +58,20 @@ class MpdClient
     index_file(file)
   end
 
-  def queue_playlist(file, range, position)
+  def queue_playlist(file, playlist_positions, queue_position)
     current_size = connection.queue.size
     ## load playlist to queue
     playlist = MPD::Playlist.new(connection, file)
-    playlist.load(range)
+
+    ## playlist supports loading range but want to load individually.
+    ## if loaded as range, single delete call will remove all of it.
+    playlist_positions.each do |e|
+      playlist.load(e)
+    end
 
     ## playlist items always loads att end
-    ## move them into position
-    connection.move((current_size..connection.queue.size-1), position.to_i)
+    ## move range of new items into position
+    connection.move((current_size..connection.queue.size-1), queue_position.to_i)
     index_playlist_file(file)
   end
 
