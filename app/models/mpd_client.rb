@@ -25,11 +25,6 @@ class MpdClient
     end
   end
 
-
-  def current_playlist
-    'default'
-  end
-
   def current_song_changed_callback(s)
     Rails.logger.debug "Current song changed #{s}"
   end
@@ -47,44 +42,65 @@ class MpdClient
   ## return array of songs
   def index_playlist_file(file)
     playlist = []
-    connection.send_command(:listplaylistinfo, file).each do |song|
-      playlist << Song.update(song)
+    connection.send_command(:listplaylistinfo, file).each_with_index do |song, i|
+      playlist << Song.update(song.merge( file_index: i ))
     end
     playlist
   end
 
+  ##
+  ## modify queue (current playlist)
+  ##
+
   def queue_file(file, position)
-    index_file(file)
     ## load song to queue
     connection.addid(file, position.to_i)
-    Playlist.update(current_playlist, connection.queue)
+    index_file(file)
   end
 
-  def queue_playlist(file, range)
-    index_playlist_file(file)
+  def queue_playlist(file, range, position)
+    current_size = connection.queue.size
     ## load playlist to queue
     playlist = MPD::Playlist.new(connection, file)
     playlist.load(range)
-    Playlist.update(current_playlist, connection.queue)
+
+    ## playlist items always loads att end
+    ## move them into position
+    connection.move((current_size..connection.queue.size-1), position.to_i)
+    index_playlist_file(file)
   end
 
-  def move(id, offset)
-    connection.move({id: id}, offset)
-    Playlist.update(current_playlist, connection.queue)
+  def play(position)
+    song_id = connection.queue[position].id
+    connection.play(id: song_id)
+  end
+
+  def stop
+    connection.stop
+  end
+
+  def pause
+    connection.pause=(true)
+  end
+
+  def unpause
+    connection.pause=(false)
+  end
+
+  def next
+    connection.next
+  end
+
+  def previous
+    connection.previous
   end
 
   def delete(id)
     connection.delete(id: id)
-    Playlist.update(current_playlist, connection.queue)
   end
 
-  def current_queue
-    playlist = []
-    connection.queue.each do |song|
-      playlist << Song.update(song.to_h)
-    end
-    playlist
-  end
+
+
 
   private
 
