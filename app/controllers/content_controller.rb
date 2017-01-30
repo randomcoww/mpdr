@@ -6,7 +6,7 @@ class ContentController < ApplicationController
 
   def index
     path = params[:path]
-    content = Content.reindex(path: path, recursive: false)
+    content = Content.reindex(path, false)
 
     if content
       json = {

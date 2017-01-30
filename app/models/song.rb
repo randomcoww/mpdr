@@ -13,7 +13,7 @@ class Song
   attribute :playlist_index, Integer, mapping: { index: 'not_analyzed' }
 
   def self.update(opts)
-    id = opts[:file]
+    id = opts[:file].to_s
     unless opts[:range].to_s.blank?
       id += "_#{opts[:range].to_s}"
     end
