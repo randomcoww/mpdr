@@ -100,6 +100,7 @@ describe MpdClient do
       client.connection.disconnect
     end
 
+
     describe ".queue_file" do
       context "empty playlist" do
         before :each do
@@ -115,6 +116,71 @@ describe MpdClient do
         end
       end
     end
+
+
+    describe ".play" do
+      before :each do
+        client.queue_file('dir1/test1.mp3', 0)
+        client.queue_file('dir2/test2.mp3', 1)
+        client.play(0)
+      end
+
+      it "sets current_song" do
+        expect(client.connection.current_song.file).to eq('dir1/test1.mp3')
+      end
+    end
+
+
+    describe ".delete" do
+      before :each do
+        client.queue_file('dir1/test1.mp3', 0)
+      end
+
+      context "with current_song" do
+        context "single file" do
+          before :each do
+            client.play(0)
+            client.delete(0)
+          end
+
+          context "first file" do
+            it "nulls current song" do
+              expect(client.connection.current_song).to eq(nil)
+            end
+
+            it "deletes item" do
+              expect(client.connection.queue.size).to eq(0)
+            end
+          end
+        end
+
+        context "multiple files" do
+          before :each do
+            client.queue_file('dir2/test2.mp3', 1)
+
+            client.play(0)
+            client.delete(0)
+          end
+
+          context "first file" do
+            it "goes to next song" do
+              expect(client.connection.current_song.file).to eq('dir2/test2.mp3')
+            end
+
+            it "deletes item" do
+              expect(client.connection.queue.size).to eq(1)
+            end
+          end
+
+          context "last file" do
+            it "deletes item" do
+              expect(client.connection.queue.size).to eq(1)
+            end
+          end
+        end
+      end
+    end
+
 
     describe ".queue_playlist" do
       context "empty playlist" do

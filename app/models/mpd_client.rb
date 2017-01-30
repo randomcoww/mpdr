@@ -71,8 +71,10 @@ class MpdClient
   end
 
   def play(position)
-    song_id = connection.queue[position].id
-    connection.play(id: song_id)
+    id = id_from_position(position)
+    if id
+      connection.play(id: id)
+    end
   end
 
   def stop
@@ -87,22 +89,36 @@ class MpdClient
     connection.pause=(false)
   end
 
-  def next
+  def go_next
     connection.next
   end
 
-  def previous
+  def go_previous
     connection.previous
   end
 
-  def delete(id)
-    connection.delete(id: id)
+  def delete(position)
+    ## stop if this is the current song - otherwise it won't delete
+    if connection.current_song.pos == position
+      go_next
+      stop
+    end
+    id = id_from_position(position)
+    if id
+      connection.play(id: id)
+    end
   end
 
 
 
 
   private
+
+  def id_from_position(position)
+    connection.queue[position].id
+  rescue
+    nil
+  end
 
   def music_file_index(file)
     existing_index = connection.songs(file).first
