@@ -94,10 +94,10 @@ describe MpdClient do
       @client.connection.clear
     end
 
-    describe ".queue_file" do
+    describe ".queue_audiofile" do
       context "empty playlist" do
         before :each do
-          @client.queue_file('dir1/test1.mp3', 0)
+          @client.queue_audiofile('dir1/test1.mp3', 0)
         end
 
         it "queue should be 1 long" do
@@ -112,8 +112,8 @@ describe MpdClient do
 
     describe ".play" do
       before :each do
-        @client.queue_file('dir1/test1.mp3', 0)
-        @client.queue_file('dir2/test2.mp3', 1)
+        @client.queue_audiofile('dir1/test1.mp3', 0)
+        @client.queue_audiofile('dir2/test2.mp3', 1)
         @client.play(0)
       end
 
@@ -125,7 +125,7 @@ describe MpdClient do
     describe ".delete" do
       context "regular file" do
         before :each do
-          @client.queue_file('dir1/test1.mp3', 0)
+          @client.queue_audiofile('dir1/test1.mp3', 0)
           @client.delete(0)
         end
 
@@ -136,7 +136,7 @@ describe MpdClient do
 
       context "playlist item" do
         before :each do
-          @client.queue_playlist('dir1/test.cue', (0..3), 0)
+          @client.queue_playlist('dir1/test.cue', (0..3), 0, 2)
           @client.delete(1)
         end
 
@@ -165,8 +165,8 @@ describe MpdClient do
 
         context "multiple files" do
           before :each do
-            @client.queue_file('dir1/test1.mp3', 0)
-            @client.queue_file('dir2/test2.mp3', 1)
+            @client.queue_audiofile('dir1/test1.mp3', 0)
+            @client.queue_audiofile('dir2/test2.mp3', 1)
           end
 
           context "first file" do
@@ -206,7 +206,7 @@ describe MpdClient do
     describe ".queue_playlist" do
       context "empty playlist" do
         before :each do
-          @client.queue_playlist('dir1/test.cue', 0..2, 0)
+          @client.queue_playlist('dir1/test.cue', 0..2, 0, 2)
         end
 
         it "queue should be correct length" do
@@ -240,14 +240,14 @@ describe MpdClient do
 
         before :each do
           ## existing
-          @client.queue_file('dir1/test1.mp3', 0)
-          @client.queue_file('dir2/test2.mp3', 1)
+          @client.queue_audiofile('dir1/test1.mp3', 0)
+          @client.queue_audiofile('dir2/test2.mp3', 1)
         end
 
         context "no current_song" do
           before :each do
             ## queue new to position 1
-            @client.queue_playlist('dir1/test.cue', 0..2, 1)
+            @client.queue_playlist('dir1/test.cue', 0..2, 1, 2)
           end
 
           it_behaves_like "populated playlist"
@@ -259,7 +259,7 @@ describe MpdClient do
             @client.play(1)
             @client.pause
             ## queue new to position 1
-            @client.queue_playlist('dir1/test.cue', 0..2, 1)
+            @client.queue_playlist('dir1/test.cue', 0..2, 1, 2)
           end
 
           it_behaves_like "populated playlist"

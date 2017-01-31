@@ -5,6 +5,7 @@ class Content
   attribute :name, String
   attribute :directory, Boolean
   attribute :mtime, Integer
+  attribute :parent, String, mapping: { index: 'not_analyzed' }
   attribute :children, String, default: [], mapping: { index: 'not_analyzed' }
 
   ## path is relative to mpd music path
@@ -45,9 +46,11 @@ class Content
       content.children << e
       if recursive
         child = Content.reindex(File.join(path, e), true)
+        child.parent = content.id
+        child.save
       end
     end
-    content.save
+    # content.save
     content
   end
 

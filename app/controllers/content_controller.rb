@@ -7,12 +7,14 @@ class ContentController < ApplicationController
   def index
     path = params[:path]
     content = Content.reindex(path, false)
+    content.save
 
     if content
       json = {
         path: content.id,
         name: content.name,
         directory: content.directory,
+        parent: content.parent,
         children: content.children
       }
 

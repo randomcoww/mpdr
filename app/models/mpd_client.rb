@@ -55,26 +55,34 @@ class MpdClient
   ##
 
   def queue_file(file, position)
+    queue_audiofile(file, position)
+  rescue MPD::NotFound
+    queue_playlist(file, nil, position)
+  end
+
+  ## add single file to position in queue
+  def queue_audiofile(file, position)
     ## load song to queue
     connection.addid(file, position.to_i)
     # index_file(file)
   end
 
-  def queue_playlist(file, playlist_positions, queue_position)
+  ## add playlist to queue in chunks
+  def queue_playlist(file, playlist_range, queue_position, chunk_size=10)
     current_size = connection.queue.size
     ## load playlist to queue
     playlist = MPD::Playlist.new(connection, file)
 
-    ## playlist supports loading range but want to load individually.
-    ## if loaded as range, single delete call will remove all of it.
-    playlist_positions.each do |e|
-      playlist.load(e)
-    end
+    ## load as range in chunks
+    playlist_range.each_slice(chunk_size) do |slice|
+      playlist.load(slice.first..slice.last)
 
-    ## playlist items always loads at end
-    ## move range of new items into position
-    connection.move((current_size..connection.queue.size-1), queue_position.to_i)
-    # index_playlist_file(file)
+      previous_size = current_size
+      current_size = connection.queue.size
+
+      connection.move((previous_size..current_size-1), queue_position.to_i)
+      queue_position += chunk_size
+    end
   end
 
   def play(position)
