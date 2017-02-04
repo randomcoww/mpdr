@@ -97,7 +97,15 @@ class MpdClient
 
   def index_incremental
     while true
-      item = JSON.parse(redis.lpop('music_database'))
+      item = redis.lpop('music_database')
+
+      if item.nil?
+        Rails.logger.debug("Waiting for content ...")
+        sleep 10
+        next
+      end
+
+      item = JSON.parse(item)
       case item['message']
 
       when / : update: added /
@@ -127,8 +135,8 @@ class MpdClient
         end
       end
     end
-  rescue
-    Rails.logger.info("Broke from indexing loop")
+  rescue => e
+    Rails.logger.error("Incremental index job failed: #{e}")
   end
 
 
