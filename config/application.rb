@@ -23,6 +23,7 @@ module Mpdr
     # Do not swallow errors in after_commit/after_rollback callbacks.
     config.active_record.raise_in_transactional_callbacks = true
 
+    config.mpd_internal_path = Rails.root.join('spec', 'files', 'mpd_internal')
     config.mpd_mount_path = Rails.root.join('spec', 'files', 'mpd_mount')
     # config.mpd_mount_path = Rails.root.join('spec')
   end

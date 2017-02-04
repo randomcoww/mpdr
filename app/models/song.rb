@@ -1,8 +1,6 @@
 class Song
   include Elasticsearch::Persistence::Model
 
-  attribute :file, String, mapping: { index: 'not_analyzed' }
-  attribute :range, String, mapping: { index: 'not_analyzed' }
   attribute :date, DateTime
   attribute :albumartist, String
   attribute :album, String
@@ -10,29 +8,31 @@ class Song
   attribute :title, String
   attribute :artist, String
   attribute :genre, String
-  attribute :playlist_index, Integer, mapping: { index: 'not_analyzed' }
+  attribute :lastmodified, DateTime, mapping: { index: 'not_analyzed' }
 
-  def self.update(opts)
-    id = opts[:file].to_s
-    unless opts[:range].to_s.blank?
-      id += "_#{opts[:range].to_s}"
+  def self.update(c)
+    song = get_or_create(c[:file])
+
+    mtime = c['last-modified'.to_sym]
+    mtime = mtime.last if mtime.is_a?(Array)
+
+    if mtime.to_i > song.lastmodified.to_i
+      song.lastmodified = mtime.to_i
+      c.each do |k, v|
+        song[k] = v if song.respond_to?(k)
+      end
+
+      song.save
     end
-
-    song = get_or_create(id)
-
-    opts.each do |k, v|
-      song[k] = v if song.respond_to?(k)
-    end
-
-    song.save
     song
   end
 
   def self.get_or_create(id)
     find(id)
   rescue
-    song = new
-    song[:id] = id
-    song
+    c = new
+    c[:id] = id
+    c[:lastmodified] = 0
+    c
   end
 end
