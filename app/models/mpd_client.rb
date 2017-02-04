@@ -101,38 +101,42 @@ class MpdClient
 
       if item.nil?
         Rails.logger.debug("Waiting for content ...")
-        sleep 10
+        sleep 20
         next
       end
 
-      item = JSON.parse(item)
-      case item['message']
+      begin
+        item = JSON.parse(item)
+        case item['message']
 
-      when / : update: added /
-        path = item['message'].gsub(/^.*? : update: added /, '')
-        if !path.blank?
-          Rails.logger.debug("Add from log #{path}")
+        when / : update: added /
+          path = item['message'].gsub(/^.*? : update: added /, '')
+          if !path.blank?
+            Rails.logger.debug("Add from log #{path}")
 
-          c = connection.send_command(:lsinfo, path)
-          index_file(c) if c.has_key?(:file)
+            c = connection.send_command(:lsinfo, path)
+            index_file(c) if c.has_key?(:file)
+          end
+
+        when / : update: updating /
+          path = item['message'].gsub(/^.*? : update: updating /, '')
+          if !path.blank?
+            Rails.logger.debug("Update from log #{path}")
+
+            c = connection.send_command(:lsinfo, path)
+            index_file(c) if c.has_key?(:file)
+          end
+
+        when / : update: removing /
+          path = item['message'].gsub(/^.*? : update: removing /, '')
+          if !path.blank?
+            Rails.logger.debug("Delete from log #{path}")
+
+            Song.find(path).destroy rescue true
+          end
         end
-
-      when / : update: updating /
-        path = item['message'].gsub(/^.*? : update: updating /, '')
-        if !path.blank?
-          Rails.logger.debug("Update from log #{path}")
-
-          c = connection.send_command(:lsinfo, path)
-          index_file(c) if c.has_key?(:file)
-        end
-
-      when / : update: removing /
-        path = item['message'].gsub(/^.*? : update: removing /, '')
-        if !path.blank?
-          Rails.logger.debug("Delete from log #{path}")
-
-          Song.find(path).destroy rescue true
-        end
+      rescue
+        Rails.logger.warn("Incremental index failed to parse: #{item}")
       end
     end
   rescue => e
