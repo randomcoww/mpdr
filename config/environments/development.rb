@@ -39,6 +39,5 @@ Rails.application.configure do
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
-  config.mpd_internal_path = Rails.root.join('/tmp', 'mpd_internal')
   config.mpd_mount_path = File.join('/auto', 'music')
 end
