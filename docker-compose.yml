@@ -1,0 +1,36 @@
+version: "2"
+services:
+  mpd:
+    image: mpd
+    ports:
+      - "6600:6600"
+    volumes:
+      - mpd-data:/mpd/cache
+      - /auto/music:/mpd/music
+  filebeat:
+    image: filebeat
+    command: -v
+    links:
+      - redis
+    volumes:
+      - mpd-data:/filebeat
+      - filebeat-data:/var/lib/filebeat
+      - ./filebeat-mpd-redis.yml:/etc/filebeat/filebeat.yml
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/var/lib/redis
+  elasticsearch:
+    image: elasticsearch
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/var/lib/elasticsearch
+
+volumes:
+  mpd-data:
+  redis-data:
+  filebeat-data:
+  elasticsearch-data:
