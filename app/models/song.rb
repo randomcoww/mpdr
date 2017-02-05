@@ -1,6 +1,7 @@
 class Song
   include Elasticsearch::Persistence::Model
 
+  attribute :pos, Integer
   attribute :file, String
   attribute :date, DateTime
   attribute :albumartist, String

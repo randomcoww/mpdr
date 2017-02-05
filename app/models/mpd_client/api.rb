@@ -32,6 +32,7 @@ class MpdClient::Api < MpdClient
 
 
   def get_indexed_content(c)
+    position = c[:pos]
     if c.has_key?(:file)
       begin
         c = Song.find(c[:file])
@@ -40,6 +41,7 @@ class MpdClient::Api < MpdClient
         c = index if !index.nil?
       end
     end
+    c[:pos] = position if !position.nil?
     c
   end
 

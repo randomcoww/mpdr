@@ -1,4 +1,4 @@
-class ContentController < ApplicationController
+class DatabaseController < ApplicationController
 
   # rescue_from Elasticsearch::Persistence::Repository::DocumentNotFound do
   #   render json: {}, status: :not_found
