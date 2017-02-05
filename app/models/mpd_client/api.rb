@@ -22,70 +22,52 @@ class MpdClient::Api < MpdClient
     end
   end
 
-
-
-  ##
-  ## full index of db to elasticsearch by recursively reading database
-  ## works but slow
-  ##
-
-  # def index_database
-  #   index_children('')
-  # end
-
-  def index_children(path)
-    contents = connection.send_command(:lsinfo, path)
-
-    result = []
-    if contents.is_a?(Hash)
-      index_content(contents)
-
-    elsif contents.is_a?(Array)
-      contents.each do |c|
-        index_content(c)
-      end
-    end
-  end
-
-  def index_content(c)
-    index_playlist_file(c) if c.has_key?(:playlist)
-
-    if c.has_key?(:directory)
-      Rails.logger.debug("index: directory #{c[:directory]}")
-      index_directory(c)
-    end
-
-    index_file(c) if c.has_key?(:file)
-  end
-
-  def index_directory(c)
-    if c[:directory].is_a?(Array)
-      c[:directory].each do |path|
-        index_children(path)
-      end
-    else
-      index_children(c[:directory])
-    end
-  end
-
-  def index_file(c)
-    Song.update(c)
-  end
-
-  def index_playlist_file(hash)
-    # s = Song.update(hash)
-  end
-
-
-
-
-
   def current_song_changed_callback(s)
     Rails.logger.debug "Current song changed #{s}"
   end
 
   def next_song_changed_callback(s)
     Rails.logger.debug "Next song changed: #{s}"
+  end
+
+
+  def get_indexed_content(c)
+    if c.has_key?(:file)
+      begin
+        c = Song.find(c[:file])
+      rescue
+        index = Song.update(c)
+        c = index if !index.nil?
+      end
+    end
+    c
+  end
+
+  def get_database_path(path, start_index, end_index)
+    start_index = (start_index || 0).to_i
+    end_index = (end_index || -1).to_i
+
+    content = path_info(path)
+    content = [content] unless content.is_a?(Array)
+    content = content[start_index..end_index]
+
+    content.each_with_index do |c, i|
+      content[i] = get_indexed_content(c)
+    end
+    content
+  end
+
+  def get_queue(start_index, end_index)
+    start_index = (start_index || 0).to_i
+    end_index = (end_index || -1).to_i
+
+    content = connection.send_command(:playlistinfo)
+    content = content[start_index..end_index]
+
+    content.each_with_index do |c, i|
+      content[i] = get_indexed_content(c)
+    end
+    content
   end
 
   ## add single file to position in queue

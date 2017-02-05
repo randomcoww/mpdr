@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   # See how all your routes lay out with "rake routes".
 
   get 'api/content' => 'content#index'
+  get 'api/queue' => 'queue#index'
 
   # You can have the root of your site routed with "root"
   # root 'welcome#index'

@@ -7,7 +7,7 @@ namespace :resque do
     require 'resque'
 
     # you probably already have this somewhere
-    Resque.redis = Rails.application.config.resque
+    Resque.redis = "#{Rails.application.config.redis[:host]}:#{Rails.application.config.redis[:port]}"
   end
 
   task :setup_schedule => :setup do

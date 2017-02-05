@@ -42,7 +42,7 @@ Rails.application.configure do
 
   config.mpd_mount_path = Rails.root.join('spec', 'files', 'mpd_mount')
   config.mpd = { host: 'localhost', port: 6600 }
-  config.resque = 'localhost:6379'
-  config.elasticsearch = 'localhost:9200'
+  config.redis = { host: 'locahost', port: 6379 }
+  config.elasticsearch = { host: 'localhost', port: 9200 }
   config.resque_schedule = Rails.root.join('config', 'resque_schedule.yml')
 end
