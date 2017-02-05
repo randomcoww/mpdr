@@ -1,4 +1,4 @@
-class MpdClient::Player < MpdClient
+class MpdClient::Api < MpdClient
 
   def connect
     unless connection.connected?
@@ -36,6 +36,7 @@ class MpdClient::Player < MpdClient
   def index_children(path)
     contents = connection.send_command(:lsinfo, path)
 
+    result = []
     if contents.is_a?(Hash)
       index_content(contents)
 

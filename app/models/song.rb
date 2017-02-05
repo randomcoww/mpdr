@@ -19,7 +19,8 @@ class Song
     song.save
     song
   rescue
-    Rails.log.error("Failed to update song from #{c}")
+    Rails.logger.error("Failed to update song from #{c}")
+    nil
   end
 
   def self.get_or_create(id)

@@ -7,7 +7,7 @@ namespace :resque do
     require 'resque'
 
     # you probably already have this somewhere
-    Resque.redis = 'localhost:6379'
+    Resque.redis = Rails.application.config.resque
   end
 
   task :setup_schedule => :setup do
@@ -23,7 +23,6 @@ namespace :resque do
 
     # The schedule doesn't need to be stored in a YAML, it just needs to
     # be a hash.  YAML is usually the easiest.
-    # Resque.schedule = YAML.load_file('your_resque_schedule.yml')
     Resque.schedule = YAML.load_file(Rails.application.config.resque_schedule)
 
     # If your schedule already has +queue+ set for each job, you don't

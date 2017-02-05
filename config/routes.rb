@@ -3,7 +3,6 @@ Rails.application.routes.draw do
   # See how all your routes lay out with "rake routes".
 
   get 'api/content' => 'content#index'
-  put 'api/content' => 'content#reindex'
 
   # You can have the root of your site routed with "root"
   # root 'welcome#index'

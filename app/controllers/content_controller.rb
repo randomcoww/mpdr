@@ -1,27 +1,33 @@
 class ContentController < ApplicationController
 
-  rescue_from Elasticsearch::Persistence::Repository::DocumentNotFound do
-    render file: "public/404.html", status: 404, layout: false
+  # rescue_from Elasticsearch::Persistence::Repository::DocumentNotFound do
+  #   render json: {}, status: :not_found
+  # end
+  rescue_from Exception do
+    render json: {}, status: :not_found
   end
 
   def index
     path = params[:path]
-    content = Content.reindex(path, false)
-    content.save
+    start_index = (params[:start] || 0).to_i
+    end_index = (params[:end] || -1).to_i
 
-    if content
-      json = {
-        path: content.id,
-        name: content.name,
-        directory: content.directory,
-        parent: content.parent,
-        children: content.children
-      }
+    content = MpdClient::Api.client.path_info(path)
+    content = [content] unless content.is_a?(Array)
+    content = content[start_index..end_index]
 
-      render json: json, status: :ok
-    else
-      render json: {}, status: :not_found
+    content.each_with_index do |c, i|
+      if c.has_key?(:file)
+        begin
+          index = Song.find(c[:file])
+        rescue
+          index = Song.update(c)
+        end
+        content[i] = index if !index.nil?
+      end
     end
+
+    render json: content, status: :ok
   end
 
   def search

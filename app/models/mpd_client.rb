@@ -4,7 +4,7 @@ class MpdClient
 
   def self.client
     mpdclient = new
-    mpdclient.connection = MPD.new('localhost', 6600, {:callbacks => true})
+    mpdclient.connection = MPD_CONNECTION
     mpdclient.connect
     mpdclient
   end
@@ -15,10 +15,11 @@ class MpdClient
     end
   end
 
+  ## using one connection - don't disconnect
   def disconnect
-    if connection.connected?
-      connection.disconnect
-    end
+    # if connection.connected?
+    #   connection.disconnect
+    # end
   end
 
   def path_info(path)

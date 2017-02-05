@@ -8,6 +8,6 @@ class IncrementalIndexer
   rescue => e
     Rails.logger.error("Incremental indexer failed with: #{e.message}, #{e.backtrace}")
   ensure
-    indexer_client.disconnect
+    indexer_client.disconnect if !indexer_client.nil?
   end
 end

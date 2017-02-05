@@ -1,1 +1,1 @@
-MPD.new('localhost', 6600, {:callbacks => true})
+MPD_CONNECTION = MPD.new(Rails.application.config.mpd[:host], Rails.application.config.mpd[:port], {:callbacks => true})

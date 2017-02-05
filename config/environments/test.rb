@@ -41,4 +41,8 @@ Rails.application.configure do
   # config.action_view.raise_on_missing_translations = true
 
   config.mpd_mount_path = Rails.root.join('spec', 'files', 'mpd_mount')
+  config.mpd = { host: 'localhost', port: 6600 }
+  config.resque = 'localhost:6379'
+  config.elasticsearch = 'localhost:9200'
+  config.resque_schedule = Rails.root.join('config', 'resque_schedule.yml')
 end
