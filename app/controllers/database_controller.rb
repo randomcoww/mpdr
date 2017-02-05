@@ -3,8 +3,11 @@ class DatabaseController < ApplicationController
   # rescue_from Elasticsearch::Persistence::Repository::DocumentNotFound do
   #   render json: {}, status: :not_found
   # end
-  rescue_from Exception do
-    render json: {}, status: :not_found
+  rescue_from Exception do |e|
+    render json: {
+      error: e.message,
+      trace: e.backtrace
+    }, status: :unprocessable_entity
   end
 
   def index

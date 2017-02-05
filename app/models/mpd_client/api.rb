@@ -32,7 +32,8 @@ class MpdClient::Api < MpdClient
 
 
   def get_indexed_content(c)
-    position = c[:pos]
+    playlist_id = c[:id]
+
     if c.has_key?(:file)
       begin
         c = Song.find(c[:file])
@@ -41,7 +42,7 @@ class MpdClient::Api < MpdClient
         c = index if !index.nil?
       end
     end
-    c[:pos] = position if !position.nil?
+    c[:playlist_id] = playlist_id
     c
   end
 
@@ -63,8 +64,7 @@ class MpdClient::Api < MpdClient
     start_index = (start_index || 0).to_i
     end_index = (end_index || -1).to_i
 
-    content = connection.send_command(:playlistinfo)
-    content = content[start_index..end_index]
+    content = connection.send_command(:playlistinfo, (start_index..end_index))
 
     content.each_with_index do |c, i|
       content[i] = get_indexed_content(c)
@@ -72,26 +72,27 @@ class MpdClient::Api < MpdClient
     content
   end
 
+  def length
+    connection.status[:playlistlength]
+  end
+
   ## add single file to position in queue
-  def queue_file(file, position)
-    connection.addid(file, position)
+  def add_file(path, position=nil)
+    c = path_info(path)
+    connection.addid(c[:file], position)
   end
 
-  def queue_playlist(file, playlist_range, position)
-    current_size = connection.queue.size
-    ## load playlist to queue
-    playlist = MPD::Playlist.new(connection, file)
-    playlist.load(playlist_range)
-    if position
-      connection.move((current_size..connection.queue.size-1), position.to_i)
-    end
+  ## needed for directories
+  def add_path(path, position=nil)
+    c = path_info(path)
+    length_before = length
+    connection.send_command(:add, path)
+    ## move files to desired position
+    move(length_before, length-1, position) if !position.nil?
   end
 
-  def play(position)
-    id = id_from_position(position)
-    if id
-      connection.play(id: id)
-    end
+  def play(playlist_id)
+    connection.send_command(:playid, playlist_id)
   end
 
   def stop
@@ -114,20 +115,11 @@ class MpdClient::Api < MpdClient
     connection.previous
   end
 
-  def delete(position)
-    id = id_from_position(position)
-    if id
-      connection.delete(id: id)
-    end
+  def move(start_index, end_index, to_index)
+    connection.send_command(:move, (start_index.to_i..end_index.to_i), to_index.to_i)
   end
 
-
-
-  private
-
-  def id_from_position(position)
-    connection.queue[position].id
-  rescue
-    nil
+  def remove(start_index, end_index)
+    connection.send_command(:delete, (start_index.to_i..end_index.to_i))
   end
 end

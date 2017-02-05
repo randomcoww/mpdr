@@ -7,6 +7,18 @@ Rails.application.routes.draw do
   ## active playlist
   get 'api/queue' => 'queue#index'
 
+  put 'api/queue/play' => 'queue#play'
+  put 'api/queue/stop' => 'queue#stop'
+  put 'api/queue/pause' => 'queue#pause'
+  put 'api/queue/unpause' => 'queue#unpause'
+  put 'api/queue/next' => 'queue#go_next'
+  put 'api/queue/previous' => 'queue#go_previous'
+
+  put 'api/queue/add_file' => 'queue#add_file'
+  put 'api/queue/add_path' => 'queue#add_path'
+  put 'api/queue/move' => 'queue#move'
+  put 'api/queue/remove' => 'queue#remove'
+
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 
