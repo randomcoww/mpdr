@@ -1,0 +1,7 @@
+incremental_indexer:
+  description: "Index MPD database updates to elasticsearch"
+  every:
+    - "20s"
+    - :first_in: '10s'
+  class: "IncrementalIndexer"
+  queue: "mpd_incremental_indexer"

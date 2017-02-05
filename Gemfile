@@ -35,6 +35,8 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 gem 'ruby-mpd'
 gem "elasticsearch-persistence", require: 'elasticsearch/persistence/model'
 gem 'redis'
+gem 'resque'
+gem 'resque-scheduler'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console

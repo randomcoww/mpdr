@@ -40,4 +40,6 @@ Rails.application.configure do
   # config.action_view.raise_on_missing_translations = true
 
   config.mpd_mount_path = File.join('/auto', 'music')
+  config.resque = Rails.root.join('config', 'resque.yml')
+  config.resque_schedule = Rails.root.join('config', 'resque_schedule.yml')
 end
